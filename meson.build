@@ -4,7 +4,7 @@ project(
     version: '0.1',
     default_options: [
         'warning_level=3',
-        'werror=true',
+        'werror=false',
         'cpp_std=c++20',
     ],
 )
@@ -35,6 +35,9 @@ browser_exe = executable(
     win_subsystem: 'console',
     include_directories: [
         include_directories('browser'),
+    ],
+    override_options: [
+        'werror=true',
     ],
     dependencies: [
         fmt_dep,

@@ -12,7 +12,7 @@
 ## VS Code development setup
 
 ### Install
-- `clang-15` recommended, `clang-15` based, check with `clang --version`
+- LLVM and clang, `clang-15` recommended, `clang-15` based, check with `clang --version`
 - [Meson](https://mesonbuild.com/), build system
 - [Meson VS Code extension](https://marketplace.visualstudio.com/items?itemName=mesonbuild.mesonbuild)
 - [VSCode - clangd](https://marketplace.visualstudio.com/items?itemName=llvm-vs-code-extensions.vscode-clangd), linter
