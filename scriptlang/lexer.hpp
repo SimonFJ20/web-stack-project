@@ -107,9 +107,11 @@ private:
         -> Result<TokenTypes, void>;
 
     [[nodiscard]] auto constexpr inline token(
-        TokenTypes type, size_t begin) const noexcept -> Token
+        TokenTypes type, size_t begin) noexcept -> Token
     {
-        return Token { type, begin, index - begin, line, column };
+        auto token = Token { type, begin, index - begin, line, column };
+        last_token = token;
+        return token;
     }
     [[nodiscard]] auto constexpr inline done() const noexcept -> bool
     {
