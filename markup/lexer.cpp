@@ -1,5 +1,5 @@
 #include "lexer.hpp"
-#include "result.hpp"
+#include "utils/all.hpp"
 #include <cctype>
 #include <string_view>
 
