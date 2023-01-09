@@ -1,7 +1,5 @@
 
-scriptlang_sources += files(
+common_sources += files(
     'parser.cpp',
     'lexer.cpp',
 )
-
-# scriptlang_inc = include_directories('.')
