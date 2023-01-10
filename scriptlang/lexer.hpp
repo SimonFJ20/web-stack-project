@@ -4,7 +4,7 @@
 
 namespace scriptlang {
 
-enum class TokenTypes {
+enum class Tokens {
     Eof,
 
     MultilineComment,
@@ -13,6 +13,7 @@ enum class TokenTypes {
     Id,
     Int,
     Float,
+    String,
 
     If,
     Else,
@@ -65,8 +66,8 @@ enum class TokenTypes {
     FatArrow,
     DoubleEqual,
 
-    Exlamation,
-    ExlamationEqual,
+    Exclamation,
+    ExclamationEqual,
 
     Less,
     LessEqual,
@@ -75,10 +76,14 @@ enum class TokenTypes {
     GreaterEqual,
 };
 
-struct Token {
-    TokenTypes type;
-    size_t index, length;
+struct Location {
     int line, column;
+};
+
+struct Token {
+    Tokens type;
+    size_t index, length;
+    Location location;
 };
 
 class Lexer {
@@ -98,18 +103,17 @@ private:
     auto constexpr make_number() noexcept -> Result<Token, void>;
     auto constexpr make_id() noexcept -> Result<Token, void>;
     auto constexpr id_or_keyword_type(std::string_view substring) noexcept
-        -> TokenTypes;
+        -> Tokens;
+    auto constexpr make_string() noexcept -> Result<Token, void>;
     auto constexpr make_static() noexcept -> Result<Token, void>;
-    auto constexpr static_token_type() noexcept -> Result<TokenTypes, void>;
-    auto constexpr skip_multiline_comment() noexcept
-        -> Result<TokenTypes, void>;
-    auto constexpr skip_singleline_comment() noexcept
-        -> Result<TokenTypes, void>;
+    auto constexpr static_token_type() noexcept -> Result<Tokens, void>;
+    auto constexpr skip_multiline_comment() noexcept -> Result<Tokens, void>;
+    auto constexpr skip_singleline_comment() noexcept -> Result<Tokens, void>;
 
     [[nodiscard]] auto constexpr inline token(
-        TokenTypes type, size_t begin) noexcept -> Token
+        Tokens type, size_t begin) noexcept -> Token
     {
-        auto token = Token { type, begin, index - begin, line, column };
+        auto token = Token { type, begin, index - begin, { line, column } };
         last_token = token;
         return token;
     }
