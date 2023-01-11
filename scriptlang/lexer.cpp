@@ -1,13 +1,14 @@
 #include "lexer.hpp"
+#include "error.hpp"
 #include <cctype>
 #include <string_view>
 
 namespace scriptlang {
 
-auto constexpr Lexer::next() noexcept -> Result<Token, void>
+auto Lexer::make_token() noexcept -> Result<Token, Errors>
 {
     if (done())
-        return token(Tokens::Eof, index);
+        return token(Tokens::Eof, index, current_location());
     if (std::isdigit(current()) != 0)
         return make_number();
     if (std::isalpha(current()) != 0 or current() == '_')
@@ -17,32 +18,34 @@ auto constexpr Lexer::next() noexcept -> Result<Token, void>
     return make_static();
 }
 
-auto constexpr Lexer::make_number() noexcept -> Result<Token, void>
+auto Lexer::make_number() noexcept -> Result<Token, Errors>
 {
     auto begin = index;
+    auto span_from = current_location();
     while (!done() and std::isdigit(current()) != 0)
         step();
     if (current() == '.') {
         step();
         while (!done() and std::isdigit(current()) != 0)
             step();
-        return token(Tokens::Float, begin);
+        return token(Tokens::Float, begin, span_from);
     }
-    return token(Tokens::Int, begin);
+    return token(Tokens::Int, begin, span_from);
 }
 
-auto constexpr Lexer::make_id() noexcept -> Result<Token, void>
+auto Lexer::make_id() noexcept -> Result<Token, Errors>
 {
     auto begin = index;
+    auto span_from = current_location();
     while (!done()
         and (std::isalpha(current()) != 0 or std::isdigit(current()) != 0
             or current() == '_'))
         step();
-    return token(id_or_keyword_type(text.substr(begin, index - begin)), begin);
+    return token(id_or_keyword_type(text.substr(begin, index - begin)), begin,
+        span_from);
 }
 
-auto constexpr Lexer::id_or_keyword_type(std::string_view substring) noexcept
-    -> Tokens
+auto Lexer::id_or_keyword_type(std::string_view substring) noexcept -> Tokens
 {
     if (substring.compare("if") == 0)
         return Tokens::If;
@@ -75,9 +78,10 @@ auto constexpr Lexer::id_or_keyword_type(std::string_view substring) noexcept
     return Tokens::Id;
 }
 
-auto constexpr Lexer::make_string() noexcept -> Result<Token, void>
+auto Lexer::make_string() noexcept -> Result<Token, Errors>
 {
     auto begin = index;
+    auto span_from = current_location();
     step();
     auto escaped = false;
     while (!done() and (current() != '"' or escaped)) {
@@ -85,22 +89,23 @@ auto constexpr Lexer::make_string() noexcept -> Result<Token, void>
         step();
     }
     if (current() != '"')
-        return {};
+        return Errors::LexerStringNotTerminated;
     step();
-    return token(Tokens::String, begin);
+    return token(Tokens::String, begin, span_from);
 }
 
-auto constexpr Lexer::make_static() noexcept -> Result<Token, void>
+auto Lexer::make_static() noexcept -> Result<Token, Errors>
 {
     auto begin = index;
+    auto span_from = current_location();
     auto type = static_token_type();
     if (!type)
-        return {};
-    return token(*type, begin);
+        return type.transform<Token>();
+    return token(*type, begin, span_from);
 }
 
 // NOLINTNEXTLINE(readability-function-cognitive-complexity)
-auto constexpr Lexer::static_token_type() noexcept -> Result<Tokens, void>
+auto Lexer::static_token_type() noexcept -> Result<Tokens, Errors>
 {
     using TT = Tokens;
     auto stepped = [&](Tokens v) {
@@ -202,10 +207,10 @@ auto constexpr Lexer::static_token_type() noexcept -> Result<Tokens, void>
             return stepped(TT::GreaterEqual);
         return TT::Greater;
     }
-    return {};
+    return Errors::LexerUnexpectedCharacer;
 }
 
-auto constexpr Lexer::skip_multiline_comment() noexcept -> Result<Tokens, void>
+auto Lexer::skip_multiline_comment() noexcept -> Result<Tokens, Errors>
 {
     step();
     auto last = current();
@@ -213,12 +218,12 @@ auto constexpr Lexer::skip_multiline_comment() noexcept -> Result<Tokens, void>
     while (!done() and last != '*' and current() != '/')
         step();
     if (last != '*' or current() != '/')
-        return {};
+        return Errors::LexerMultilineCommentNotTerminated;
     step();
     return Tokens::MultilineComment;
 }
 
-auto constexpr Lexer::skip_singleline_comment() noexcept -> Result<Tokens, void>
+auto Lexer::skip_singleline_comment() noexcept -> Result<Tokens, Errors>
 {
     step();
     while (!done() and current() != '\n')

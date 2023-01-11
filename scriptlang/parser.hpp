@@ -1,5 +1,6 @@
 #pragma once
 
+#include "error.hpp"
 #include "lexer.hpp"
 #include "utils/all.hpp"
 #include "utils/result.hpp"
@@ -12,10 +13,6 @@
 
 namespace scriptlang {
 
-struct Span {
-    Location from, to;
-};
-
 enum class Expressions {
     Binary,
     Negate,
@@ -25,6 +22,7 @@ enum class Expressions {
     Call,
     Operator,
 
+    Struct,
     Id,
     Int,
     Float,
@@ -47,66 +45,101 @@ public:
 private:
 };
 
-class Id final : public Expression {
+class Struct final : public Expression {
 public:
-    Id(std::string value)
-        : m_value { std::move(value) }
+    Struct(Span span, std::map<std::string, std::unique_ptr<Expression>> values)
+        : m_span { span }
+        , m_values { std::move(values) }
     { }
     [[nodiscard]] auto expression_type() const noexcept -> Expressions override
     {
         return Expressions::Id;
     }
+    [[nodiscard]] auto span() const noexcept -> Span override { return m_span; }
+    [[nodiscard]] auto values() const noexcept -> auto& { return m_values; }
+
+private:
+    Span m_span;
+    std::map<std::string, std::unique_ptr<Expression>> m_values;
+};
+
+class Id final : public Expression {
+public:
+    Id(Span span, std::string value)
+        : m_span { span }
+        , m_value { std::move(value) }
+    { }
+    [[nodiscard]] auto expression_type() const noexcept -> Expressions override
+    {
+        return Expressions::Id;
+    }
+    [[nodiscard]] auto span() const noexcept -> Span override { return m_span; }
     [[nodiscard]] auto value() const noexcept { return m_value; }
 
 private:
+    Span m_span;
     std::string m_value;
 };
+
 class Int final : public Expression {
 public:
-    Int(int64_t value)
-        : m_value { value }
+    Int(Span span, int64_t value)
+        : m_span { span }
+        , m_value { value }
     { }
     [[nodiscard]] auto expression_type() const noexcept -> Expressions override
     {
         return Expressions::Int;
     }
+    [[nodiscard]] auto span() const noexcept -> Span override { return m_span; }
     [[nodiscard]] auto value() const noexcept { return m_value; }
 
 private:
+    Span m_span;
     int64_t m_value;
 };
+
 class Float final : public Expression {
 public:
-    Float(double value)
-        : m_value { value }
+    Float(Span span, double value)
+        : m_span { span }
+        , m_value { value }
     { }
     [[nodiscard]] auto expression_type() const noexcept -> Expressions override
     {
         return Expressions::Float;
     }
     [[nodiscard]] auto value() const noexcept { return m_value; }
+    [[nodiscard]] auto span() const noexcept -> Span override { return m_span; }
 
 private:
+    Span m_span;
     double m_value;
 };
+
 class Bool final : public Expression {
 public:
-    Bool(bool value)
-        : m_value { value }
+    Bool(Span span, bool value)
+        : m_span { span }
+        , m_value { value }
     { }
     [[nodiscard]] auto expression_type() const noexcept -> Expressions override
     {
         return Expressions::Bool;
     }
     [[nodiscard]] auto value() const noexcept { return m_value; }
+    [[nodiscard]] auto span() const noexcept -> Span override { return m_span; }
 
 private:
+    Span m_span;
     bool m_value;
 };
+
 class String final : public Expression {
 public:
-    String(std::string value)
-        : m_value { std::move(value) }
+    String(Span span, std::string value)
+        : m_span { span }
+        , m_value { std::move(value) }
     { }
     [[nodiscard]] auto expression_type() const noexcept -> Expressions override
     {
@@ -116,8 +149,10 @@ public:
     {
         return m_value;
     }
+    [[nodiscard]] auto span() const noexcept -> Span override { return m_span; }
 
 private:
+    Span m_span;
     std::string m_value;
 };
 
@@ -127,11 +162,25 @@ public:
         : text { text }
         , lexer(text)
     { }
-    auto parse_expression() noexcept
-        -> Result<std::unique_ptr<Expression>, void>;
-    auto parse_value() noexcept -> Result<std::unique_ptr<Expression>, void>;
+    auto parse_expression(bool strictly_values) noexcept
+        -> Result<std::unique_ptr<Expression>, Errors>;
+    auto parse_struct(bool strictly_values) noexcept
+        -> Result<std::unique_ptr<Expression>, Errors>;
+    auto parse_atom() noexcept -> Result<std::unique_ptr<Expression>, Errors>;
 
 private:
+    [[nodiscard]] static auto parse_string_value(
+        std::string_view literal) noexcept -> Result<std::string, Errors>;
+    [[nodiscard]] auto token_text(size_t index, size_t length) const noexcept
+        -> std::string
+    {
+        return std::string { text.substr(index, length) };
+    }
+    [[nodiscard]] static auto token_span(Token from, Token to) noexcept -> Span
+    {
+        return { from.span.from, to.span.to };
+    }
+
     std::string_view text;
     Lexer lexer;
 };

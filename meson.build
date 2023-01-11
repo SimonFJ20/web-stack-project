@@ -11,6 +11,11 @@ project(
 fmt_dep = dependency('fmt')
 sdl2_dep = dependency('sdl2')
 
+add_project_arguments(
+    '-Wno-gnu-statement-expression-from-macro-expansion',
+    language: 'cpp',
+)
+
 common_sources = []
 subdir('utils')
 subdir('scriptlang')
@@ -18,7 +23,6 @@ subdir('markup')
 
 browser_sources = common_sources
 subdir('browser')
-browser_sources
 
 executable(
     'web-browser',

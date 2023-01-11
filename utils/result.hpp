@@ -157,6 +157,15 @@ public:
         return unwrap();
     }
 
+    // Transforms `Result<T, E>` into `Result<Y, E>`.
+    // Requries result to be an error.
+    template <typename NewValue>
+    [[nodiscard]] constexpr auto transform() const noexcept
+        -> Result<NewValue, Error>
+    {
+        return Result<NewValue, Error>::create_error(unwrap_error());
+    }
+
     [[nodiscard]] constexpr auto map(auto func) noexcept
     {
         using NewValue = decltype(func(unwrap()));
@@ -643,3 +652,12 @@ private:
 };
 
 }
+
+// NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
+#define TRY(expr)                                                              \
+    ({                                                                         \
+        auto result = (expr);                                                  \
+        if (result.is_error())                                                 \
+            return { std::move(result.unwrap_error()) };                       \
+        std::move(result.unwrap());                                            \
+    })

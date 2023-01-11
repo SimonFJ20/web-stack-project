@@ -1,3 +1,4 @@
+#include "error.hpp"
 #include "utils/all.hpp"
 #include <optional>
 #include <string_view>
@@ -80,10 +81,14 @@ struct Location {
     int line, column;
 };
 
+struct Span {
+    Location from, to;
+};
+
 struct Token {
     Tokens type;
     size_t index, length;
-    Location location;
+    Span span;
 };
 
 class Lexer {
@@ -91,29 +96,39 @@ public:
     Lexer(std::string_view text)
         : text { text }
     { }
-    auto constexpr next() noexcept -> Result<Token, void>;
-    auto peek() noexcept -> Result<Token, void>
+    auto next() noexcept -> Result<Token, Errors> { return make_token(); }
+    auto peek() noexcept -> Result<Token, Errors>
     {
         if (last_token)
-            return Result<Token, void>::create_ok(*last_token);
-        return {};
+            return Result<Token, Errors>::create_ok(*last_token);
+        return Errors::LexerNoTokenYet;
     }
 
 private:
-    auto constexpr make_number() noexcept -> Result<Token, void>;
-    auto constexpr make_id() noexcept -> Result<Token, void>;
-    auto constexpr id_or_keyword_type(std::string_view substring) noexcept
-        -> Tokens;
-    auto constexpr make_string() noexcept -> Result<Token, void>;
-    auto constexpr make_static() noexcept -> Result<Token, void>;
-    auto constexpr static_token_type() noexcept -> Result<Tokens, void>;
-    auto constexpr skip_multiline_comment() noexcept -> Result<Tokens, void>;
-    auto constexpr skip_singleline_comment() noexcept -> Result<Tokens, void>;
+    auto make_token() noexcept -> Result<Token, Errors>;
+    auto make_number() noexcept -> Result<Token, Errors>;
+    auto make_id() noexcept -> Result<Token, Errors>;
+    auto id_or_keyword_type(std::string_view substring) noexcept -> Tokens;
+    auto make_string() noexcept -> Result<Token, Errors>;
+    auto make_static() noexcept -> Result<Token, Errors>;
+    auto static_token_type() noexcept -> Result<Tokens, Errors>;
+    auto skip_multiline_comment() noexcept -> Result<Tokens, Errors>;
+    auto skip_singleline_comment() noexcept -> Result<Tokens, Errors>;
 
-    [[nodiscard]] auto constexpr inline token(
-        Tokens type, size_t begin) noexcept -> Token
+    [[nodiscard]] auto constexpr inline current_location() const noexcept
+        -> Location
     {
-        auto token = Token { type, begin, index - begin, { line, column } };
+        return { line, column };
+    }
+    [[nodiscard]] auto constexpr inline token(
+        Tokens type, size_t begin, Location span_from) noexcept -> Token
+    {
+        auto token = Token {
+            type,
+            begin,
+            index - begin,
+            { span_from, { line, column } },
+        };
         last_token = token;
         return token;
     }
