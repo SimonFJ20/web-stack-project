@@ -17,18 +17,18 @@ auto Parser::parse_struct(bool strictly_values) noexcept
     -> Result<std::unique_ptr<Expression>, Errors>
 {
     auto values = std::map<std::string, std::unique_ptr<Expression>> {};
-    auto first_brace = TRY(lexer.peek());
-    if (TRY(lexer.peek()).type == Tokens::LBrace) {
-        TRY(lexer.next());
-        if (TRY(lexer.peek()).type != Tokens::Eof
-            && TRY(lexer.peek()).type != Tokens::LBrace) {
-            if (!(TRY(lexer.peek()).type != Tokens::Id)) {
-                return Errors::ParserStructExpectedId;
-            }
+    auto first_brace = *lexer.peek();
+    if (first_brace.type == Tokens::LBrace) {
+        auto name = *lexer.next();
+        if (name.type != Tokens::Eof && name.type != Tokens::LBrace) {
+            if (name.type != Tokens::Id)
+                return Errors::ParserUnexpected;
+            if (lexer.next()->type != Tokens::Colon)
+                return Errors::ParserUnexpected;
         }
-        auto last_brace = TRY(lexer.peek());
+        auto last_brace = *lexer.peek();
         if (last_brace.type != Tokens::RBrace)
-            return Errors::ParserStructNotTerminated;
+            return Errors::ParserMalformed;
         return {
             std::make_unique<Struct>(
                 token_span(first_brace, last_brace), std::move(values)),
@@ -40,26 +40,22 @@ auto Parser::parse_struct(bool strictly_values) noexcept
 auto Parser::parse_atom() noexcept
     -> Result<std::unique_ptr<Expression>, Errors>
 {
-    auto token = TRY(lexer.peek());
+    auto token = *lexer.peek();
     switch (token.type) {
         case Tokens::Id:
             return {
                 std::make_unique<Id>(token_span(token, token),
-                    token_text(lexer.peek()->index, lexer.peek()->length)),
+                    token_text(token.index, token.length)),
             };
         case Tokens::Int:
             return {
                 std::make_unique<Int>(token_span(token, token),
-                    std::atol(
-                        token_text(lexer.peek()->index, lexer.peek()->length)
-                            .c_str())),
+                    std::atol(token_text(token.index, token.length).c_str())),
             };
         case Tokens::Float:
             return {
                 std::make_unique<Float>(token_span(token, token),
-                    std::atof(
-                        token_text(lexer.peek()->index, lexer.peek()->length)
-                            .c_str())),
+                    std::atof(token_text(token.index, token.length).c_str())),
             };
         case Tokens::False:
             return {
@@ -72,8 +68,7 @@ auto Parser::parse_atom() noexcept
         case Tokens::String:
             return {
                 std::make_unique<String>(token_span(token, token),
-                    *parse_string_value(
-                        token_text(lexer.peek()->index, lexer.peek()->length))),
+                    *parse_string_value(token_text(token.index, token.length))),
             };
         default:
             return Errors::ParserExhausted;
@@ -84,7 +79,7 @@ auto Parser::parse_atom() noexcept
     -> Result<std::string, Errors>
 {
     if (literal.size() < 2)
-        return Errors::ParserMalformedStringLiteral;
+        return Errors::ParserMalformed;
     auto value = std::string {};
     auto escaped = false;
     for (const auto c : literal.substr(1, literal.size() - 2)) {

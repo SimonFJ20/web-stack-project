@@ -654,10 +654,10 @@ private:
 }
 
 // NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
-#define TRY(expr)                                                              \
-    ({                                                                         \
-        auto result = (expr);                                                  \
-        if (result.is_error())                                                 \
-            return { std::move(result.unwrap_error()) };                       \
-        std::move(result.unwrap());                                            \
-    })
+// #define TRY(expr) \
+//     ({ \
+//         auto result = (expr); \
+//         if (result.is_error()) \
+//             return { std::move(result.unwrap_error()) }; \
+//         std::move(result.unwrap()); \
+//     })

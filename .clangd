@@ -15,6 +15,7 @@ Diagnostics:
       - readability-identifier-length
       - bugprone-easily-swappable-parameters
       - readability-convert-member-functions-to-static
+      - bugprone-exception-escape
   
     CheckOptions:
       UnusedIncludes: Strict

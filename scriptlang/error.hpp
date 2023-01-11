@@ -10,9 +10,8 @@ enum class Errors {
     LexerMultilineCommentNotTerminated,
     NoLexerOutput,
     ParserExhausted,
-    ParserMalformedStringLiteral,
-    ParserStructNotTerminated,
-    ParserStructExpectedId,
+    ParserMalformed,
+    ParserUnexpected,
 };
 
 }
