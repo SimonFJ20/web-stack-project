@@ -12,6 +12,7 @@ enum class Errors {
     ParserExhausted,
     ParserMalformedStringLiteral,
     ParserStructNotTerminated,
+    ParserStructExpectedId,
 };
 
 }

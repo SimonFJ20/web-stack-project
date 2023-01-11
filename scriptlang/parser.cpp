@@ -5,11 +5,11 @@
 
 namespace scriptlang {
 
-auto parse_expression(bool strictly_values) noexcept
+auto Parser::parse_expression(bool strictly_values) noexcept
     -> Result<std::unique_ptr<Expression>, Errors>
 {
     if (strictly_values)
-        return parse_expression(true);
+        return parse_struct(true);
     return Errors::NotImplemented;
 }
 
@@ -20,6 +20,12 @@ auto Parser::parse_struct(bool strictly_values) noexcept
     auto first_brace = TRY(lexer.peek());
     if (TRY(lexer.peek()).type == Tokens::LBrace) {
         TRY(lexer.next());
+        if (TRY(lexer.peek()).type != Tokens::Eof
+            && TRY(lexer.peek()).type != Tokens::LBrace) {
+            if (!(TRY(lexer.peek()).type != Tokens::Id)) {
+                return Errors::ParserStructExpectedId;
+            }
+        }
         auto last_brace = TRY(lexer.peek());
         if (last_brace.type != Tokens::RBrace)
             return Errors::ParserStructNotTerminated;
