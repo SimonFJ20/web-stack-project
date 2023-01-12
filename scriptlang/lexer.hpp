@@ -1,6 +1,6 @@
-#include "error.hpp"
 #include "utils/all.hpp"
 #include <optional>
+#include <string>
 #include <string_view>
 
 namespace scriptlang {
@@ -89,6 +89,17 @@ struct Token {
     Tokens type;
     size_t index, length;
     Span span;
+
+    [[nodiscard]] static auto token_span(
+        const Token& from, const Token& to) noexcept -> Span
+    {
+        return { from.span.from, to.span.to };
+    }
+};
+
+struct Error {
+    Span span;
+    std::string message;
 };
 
 class Lexer {
@@ -96,24 +107,25 @@ public:
     Lexer(std::string_view text)
         : text { text }
     { }
-    auto next() noexcept -> Result<Token, Errors> { return make_token(); }
-    auto peek() noexcept -> Result<Token, Errors>
+    auto next() noexcept -> Result<Token, Error> { return make_token(); }
+    auto peek() noexcept -> Result<Token, Error>
     {
-        if (last_token)
-            return Result<Token, Errors>::create_ok(*last_token);
-        return Errors::LexerNoTokenYet;
+        if (!last_token)
+            return Error { { { 0, 0 }, { 0, 0 } }, "no token yet" };
+        return Result<Token, Error>::create_ok(*last_token);
     }
 
 private:
-    auto make_token() noexcept -> Result<Token, Errors>;
-    auto make_number() noexcept -> Result<Token, Errors>;
-    auto make_id() noexcept -> Result<Token, Errors>;
+    auto make_token() noexcept -> Result<Token, Error>;
+    auto skip_whitespace() noexcept -> Result<Token, Error>;
+    auto make_number() noexcept -> Result<Token, Error>;
+    auto make_id() noexcept -> Result<Token, Error>;
     auto id_or_keyword_type(std::string_view substring) noexcept -> Tokens;
-    auto make_string() noexcept -> Result<Token, Errors>;
-    auto make_static() noexcept -> Result<Token, Errors>;
-    auto static_token_type() noexcept -> Result<Tokens, Errors>;
-    auto skip_multiline_comment() noexcept -> Result<Tokens, Errors>;
-    auto skip_singleline_comment() noexcept -> Result<Tokens, Errors>;
+    auto make_string() noexcept -> Result<Token, Error>;
+    auto make_static() noexcept -> Result<Token, Error>;
+    auto static_token_type() noexcept -> Result<Tokens, Error>;
+    auto skip_multiline_comment() noexcept -> Result<Tokens, Error>;
+    auto skip_singleline_comment() noexcept -> Result<Tokens, Error>;
 
     [[nodiscard]] auto constexpr inline current_location() const noexcept
         -> Location

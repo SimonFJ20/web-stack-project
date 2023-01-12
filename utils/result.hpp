@@ -23,6 +23,10 @@ struct StatesValueTypes {
     struct Error { };
 };
 
+template <typename ErrorV> struct Error {
+    ErrorV value;
+};
+
 template <typename InnerValue> struct Extracter {
     using Value = void;
     using Error = void;

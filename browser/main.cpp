@@ -3,6 +3,7 @@
 #include "SDL_rect.h"
 #include "SDL_render.h"
 #include "SDL_video.h"
+#include "scriptlang/parser.hpp"
 #include "utils/all.hpp"
 #include <SDL.h>
 #include <fmt/core.h>
@@ -68,6 +69,17 @@ private:
 
 auto main() -> int
 {
+
+    const auto* text = "{name: \"test\", value: [true, false, 123, \"bruh\"], "
+                       "int: 123, float: 3.14}";
+    auto ast = scriptlang::Parser(text).parse_expression(true);
+    if (!ast)
+        fmt::print("parser error at {}:{}: {}\n\t\n",
+            ast.unwrap_error().span.from.line,
+            ast.unwrap_error().span.from.column, ast.unwrap_error().message);
+    else
+        fmt::print("ast = {}\n", ast.unwrap()->to_string());
+
     // test
     fmt::print("browser: hello world!\n");
     auto gui = GUI::create().unwrap();
