@@ -18,8 +18,6 @@ add_project_arguments(
 
 common_sources = []
 subdir('utils')
-subdir('scriptlang')
-subdir('markup')
 
 browser_sources = common_sources
 subdir('browser')

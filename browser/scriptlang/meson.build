@@ -1,5 +1,5 @@
 
-common_sources += files(
+browser_sources += files(
     'lexer.cpp',
     'parser.cpp',
 )
