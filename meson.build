@@ -16,38 +16,19 @@ add_project_arguments(
     language: 'cpp',
 )
 
-common_sources = []
-subdir('utils')
-
-browser_sources = common_sources
+sources = []
 subdir('browser')
 
 executable(
     'web-browser',
-    browser_sources,
+    sources,
     win_subsystem: 'console',
-    include_directories: [
-        include_directories('.'),
-        include_directories('browser'),
+    include_directories: [],
+    override_options: [
+        'werror=true'
     ],
     dependencies: [
         fmt_dep,
         sdl2_dep,
-    ],
-)
-
-server_sources = common_sources
-subdir('server')
-
-executable(
-    'web-server',
-    server_sources,
-    win_subsystem: 'console',
-    include_directories: [
-        include_directories('.'),
-        include_directories('server'),
-    ],
-    dependencies: [
-        fmt_dep,
     ],
 )
