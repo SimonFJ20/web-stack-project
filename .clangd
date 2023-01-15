@@ -19,6 +19,7 @@ Diagnostics:
   
     CheckOptions:
       UnusedIncludes: Strict
+      cppcoreguidelines-special-member-functions.AllowSoleDefaultDtor: true
 
       # typecase rules
       readability-identifier-naming.ClassCase: CamelCase

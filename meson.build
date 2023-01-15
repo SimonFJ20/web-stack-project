@@ -17,10 +17,10 @@ add_project_arguments(
 )
 
 sources = []
-subdir('browser')
+subdir('src')
 
 executable(
-    'web-browser',
+    'browser',
     sources,
     win_subsystem: 'console',
     include_directories: [],
