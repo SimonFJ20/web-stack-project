@@ -209,28 +209,28 @@ public:
         return is_ok() ? if_ok(unwrap()) : if_error(unwrap_error());
     }
 
-    [[nodiscard]] constexpr auto flatten() noexcept
-        requires std::same_as<Error, typename Extracter<Value>::Error>
+    [[nodiscard]] constexpr auto flatten() noexcept requires
+        std::same_as<Error, typename Extracter<Value>::Error>
     {
         using InnerValue = typename Extracter<Value>::Value;
         return is_ok() ? unwrap() : Result<InnerValue, Error>(unwrap_error());
     }
-    [[nodiscard]] constexpr auto flatten() const noexcept
-        requires std::same_as<Error, typename Extracter<Value>::Error>
+    [[nodiscard]] constexpr auto flatten() const noexcept requires
+        std::same_as<Error, typename Extracter<Value>::Error>
     {
         using InnerValue = typename Extracter<Value>::Value;
         return is_ok() ? unwrap() : Result<InnerValue, Error>(unwrap_error());
     }
 
-    [[nodiscard]] constexpr auto flatten_error() noexcept
-        requires std::same_as<Value, typename Extracter<Error>::Value>
+    [[nodiscard]] constexpr auto flatten_error() noexcept requires
+        std::same_as<Value, typename Extracter<Error>::Value>
     {
         using InnerError = typename Extracter<Error>::Error;
         return is_error() ? unwrap_error()
                           : Result<Value, InnerError>(unwrap());
     }
-    [[nodiscard]] constexpr auto flatten_error() const noexcept
-        requires std::same_as<Value, typename Extracter<Error>::Value>
+    [[nodiscard]] constexpr auto flatten_error() const noexcept requires
+        std::same_as<Value, typename Extracter<Error>::Value>
     {
         using InnerError = typename Extracter<Error>::Error;
         return is_error() ? unwrap_error()
@@ -385,14 +385,14 @@ public:
         return is_ok() ? if_ok(unwrap()) : if_error();
     }
 
-    [[nodiscard]] constexpr auto flatten() noexcept
-        requires std::same_as<void, typename Extracter<Value>::Error>
+    [[nodiscard]] constexpr auto flatten() noexcept requires
+        std::same_as<void, typename Extracter<Value>::Error>
     {
         using InnerValue = typename Extracter<Value>::Value;
         return is_ok() ? unwrap() : Result<InnerValue, void>();
     }
-    [[nodiscard]] constexpr auto flatten() const noexcept
-        requires std::same_as<void, typename Extracter<Value>::Error>
+    [[nodiscard]] constexpr auto flatten() const noexcept requires
+        std::same_as<void, typename Extracter<Value>::Error>
     {
         using InnerValue = typename Extracter<Value>::Value;
         return is_ok() ? unwrap() : Result<InnerValue, void>();
@@ -528,14 +528,14 @@ public:
         return is_ok() ? if_ok() : if_error(unwrap_error());
     }
 
-    [[nodiscard]] constexpr auto flatten_error() noexcept
-        requires std::same_as<void, typename Extracter<Error>::Value>
+    [[nodiscard]] constexpr auto flatten_error() noexcept requires
+        std::same_as<void, typename Extracter<Error>::Value>
     {
         using InnerError = typename Extracter<Error>::Error;
         return is_error() ? unwrap_error() : Result<void, InnerError>();
     }
-    [[nodiscard]] constexpr auto flatten_error() const noexcept
-        requires std::same_as<void, typename Extracter<Error>::Value>
+    [[nodiscard]] constexpr auto flatten_error() const noexcept requires
+        std::same_as<void, typename Extracter<Error>::Value>
     {
         using InnerError = typename Extracter<Error>::Error;
         return is_error() ? unwrap_error() : Result<void, InnerError>();
@@ -656,12 +656,3 @@ private:
 };
 
 }
-
-// NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
-// #define TRY(expr) \
-//     ({ \
-//         auto result = (expr); \
-//         if (result.is_error()) \
-//             return { std::move(result.unwrap_error()) }; \
-//         std::move(result.unwrap()); \
-//     })
