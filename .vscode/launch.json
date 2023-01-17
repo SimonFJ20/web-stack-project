@@ -8,9 +8,9 @@
             "type": "lldb",
             "request": "launch",
             "name": "Debug Browser",
-            "program": "${workspaceFolder}/builddir/web-browser",
+            "program": "${workspaceFolder}/builddir/browser",
             "args": [],
-            "cwd": "${workspaceFolder}"
+            "cwd": "${workspaceFolder}/builddir"
         }
     ]
 }

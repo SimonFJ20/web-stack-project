@@ -32,7 +32,7 @@ template <typename InnerValue> struct Extracter {
     using Error = void;
 };
 
-template <typename Value, typename Error> class [[nodiscard]] Result {
+template <typename Value, typename Error> class Result {
     static_assert(std::is_object_v<Value> && std::is_destructible_v<Value>,
         "incompatible Value in Result<Value, Error>");
     static_assert(std::is_object_v<Error> && std::is_destructible_v<Error>,
@@ -209,28 +209,28 @@ public:
         return is_ok() ? if_ok(unwrap()) : if_error(unwrap_error());
     }
 
-    [[nodiscard]] constexpr auto flatten() noexcept requires
-        std::same_as<Error, typename Extracter<Value>::Error>
+    [[nodiscard]] constexpr auto flatten() noexcept
+        requires std::same_as<Error, typename Extracter<Value>::Error>
     {
         using InnerValue = typename Extracter<Value>::Value;
         return is_ok() ? unwrap() : Result<InnerValue, Error>(unwrap_error());
     }
-    [[nodiscard]] constexpr auto flatten() const noexcept requires
-        std::same_as<Error, typename Extracter<Value>::Error>
+    [[nodiscard]] constexpr auto flatten() const noexcept
+        requires std::same_as<Error, typename Extracter<Value>::Error>
     {
         using InnerValue = typename Extracter<Value>::Value;
         return is_ok() ? unwrap() : Result<InnerValue, Error>(unwrap_error());
     }
 
-    [[nodiscard]] constexpr auto flatten_error() noexcept requires
-        std::same_as<Value, typename Extracter<Error>::Value>
+    [[nodiscard]] constexpr auto flatten_error() noexcept
+        requires std::same_as<Value, typename Extracter<Error>::Value>
     {
         using InnerError = typename Extracter<Error>::Error;
         return is_error() ? unwrap_error()
                           : Result<Value, InnerError>(unwrap());
     }
-    [[nodiscard]] constexpr auto flatten_error() const noexcept requires
-        std::same_as<Value, typename Extracter<Error>::Value>
+    [[nodiscard]] constexpr auto flatten_error() const noexcept
+        requires std::same_as<Value, typename Extracter<Error>::Value>
     {
         using InnerError = typename Extracter<Error>::Error;
         return is_error() ? unwrap_error()
@@ -267,7 +267,7 @@ struct Extracter<Result<ValueInferer, ErrorInferer>> {
     using Error = ErrorInferer;
 };
 
-template <typename Value> class [[nodiscard]] Result<Value, void> {
+template <typename Value> class Result<Value, void> {
     static_assert(std::is_object_v<Value> && std::is_destructible_v<Value>,
         "incompatible Error in Result<Value, Error>");
 
@@ -385,14 +385,14 @@ public:
         return is_ok() ? if_ok(unwrap()) : if_error();
     }
 
-    [[nodiscard]] constexpr auto flatten() noexcept requires
-        std::same_as<void, typename Extracter<Value>::Error>
+    [[nodiscard]] constexpr auto flatten() noexcept
+        requires std::same_as<void, typename Extracter<Value>::Error>
     {
         using InnerValue = typename Extracter<Value>::Value;
         return is_ok() ? unwrap() : Result<InnerValue, void>();
     }
-    [[nodiscard]] constexpr auto flatten() const noexcept requires
-        std::same_as<void, typename Extracter<Value>::Error>
+    [[nodiscard]] constexpr auto flatten() const noexcept
+        requires std::same_as<void, typename Extracter<Value>::Error>
     {
         using InnerValue = typename Extracter<Value>::Value;
         return is_ok() ? unwrap() : Result<InnerValue, void>();
@@ -422,7 +422,7 @@ private:
     std::optional<Value> maybe_value;
 };
 
-template <typename Error> class [[nodiscard]] Result<void, Error> {
+template <typename Error> class Result<void, Error> {
     static_assert(std::is_object_v<Error> && std::is_destructible_v<Error>,
         "incompatible Error in Result<Value, Error>");
 
@@ -528,14 +528,14 @@ public:
         return is_ok() ? if_ok() : if_error(unwrap_error());
     }
 
-    [[nodiscard]] constexpr auto flatten_error() noexcept requires
-        std::same_as<void, typename Extracter<Error>::Value>
+    [[nodiscard]] constexpr auto flatten_error() noexcept
+        requires std::same_as<void, typename Extracter<Error>::Value>
     {
         using InnerError = typename Extracter<Error>::Error;
         return is_error() ? unwrap_error() : Result<void, InnerError>();
     }
-    [[nodiscard]] constexpr auto flatten_error() const noexcept requires
-        std::same_as<void, typename Extracter<Error>::Value>
+    [[nodiscard]] constexpr auto flatten_error() const noexcept
+        requires std::same_as<void, typename Extracter<Error>::Value>
     {
         using InnerError = typename Extracter<Error>::Error;
         return is_error() ? unwrap_error() : Result<void, InnerError>();
@@ -565,7 +565,7 @@ private:
     std::optional<Error> maybe_error;
 };
 
-template <> class [[nodiscard]] Result<void, void> {
+template <> class Result<void, void> {
 public:
     enum class States { Ok, Error };
 

@@ -1,0 +1,114 @@
+
+top_level ->
+    | element
+    | value
+
+element -> Name single_line_fields element_body:?
+
+element_body -> "{" element_fields "}"
+
+element_fields -> (_ element_field (__linebreak__ element_field):*):? __linebreak__
+
+element_field ->
+    | element
+    | Id
+    | Class
+    | element_property
+    | value
+
+single_line_fields ->
+    (first_single_line_field
+        (__singleline__ single_line_field):*):? __singleline__
+
+first_single_line_field ->
+    | Id
+    | Class
+    | __singleline__ element_property
+    | __singleline__ single_line_value
+
+single_line_field ->
+    | Id
+    | Class
+    | element_property
+    | single_line_value
+
+element_property -> Name _ ("=" | ":") _ value
+
+single_line_value ->
+    | array
+    | Int
+    | Float
+    | String
+    | bool
+    | Null
+
+value ->
+    | object
+    | array
+    | Int
+    | Float
+    | String
+    | bool
+    | Null
+
+object -> "{" object_properties "}"
+
+object_properties -> (_ object_property (_ "," _ object_property):* _ ",":?):? _
+
+object_property -> (Name | String) _ ("=" | ":") _ value
+
+array -> "[" array_values "]"
+
+array_values -> (_ value (_ "," _ value):* _ ",":?):? _
+
+bool -> True | False
+
+__singleline__ -> mandatory_same_line_whitespace
+_singleline_ -> optional_same_line_whitespace
+__linebreak__ -> mandatory_linebreak
+__ -> mandatory_whitespace
+_ -> optional_whitespace
+
+mandatory_same_line_whitespace -> single_line_whitespace:+
+optional_same_line_whitespace -> single_line_whitespace:*
+
+mandatory_linebreak ->
+    single_line_whitespace:*
+    line_breaker
+    whitespace_and_line_break:*
+
+single_line_whitespace -> SingleLineComment | SingleLineWhitespace
+
+line_breaker -> MultiLineComment | MultiLineWhitespace | ";"
+
+whitespace_and_line_break -> singular_whitespace | ";"
+
+optional_whitespace -> singular_whitespace:*
+
+mandatory_whitespace -> singular_whitespace:+
+
+singular_whitespace ->
+    | SingleLineComment
+    | MultiLineWhitespace
+    | SingleLineComment
+    | MultiLineComment
+
+=== tokens ===
+
+SingleLineWhitespace -> [ \t\r\f\v]+
+MultiLineWhitespace -> [ \t\n\r\f\v]+
+SingleLineComment -> \/\/[^\n]+
+MultiLineComment -> \/\*.*?\*\/
+
+Name -> [a-zA-Z_][a-zA-Z0-9_]*
+Id -> #[a-zA-Z0-9_]+
+Class \.[a-zA-Z0-9_]+
+
+Int -> [0-9]+
+Float -> [0-9]+\.[0-9]*
+String -> "<sequence of optionally escaped characters \
+    and escaped special character placeholders \
+    terminated by an unescaped '"'>
+Null -> "null"
+False -> "false"
+True -> "true"

@@ -16,6 +16,8 @@ Diagnostics:
       - bugprone-easily-swappable-parameters
       - readability-convert-member-functions-to-static
       - bugprone-exception-escape
+      - modernize-use-nodiscard
+      - readability-else-after-return
   
     CheckOptions:
       UnusedIncludes: Strict

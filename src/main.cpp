@@ -3,10 +3,15 @@
 #include "SDL_rect.h"
 #include "SDL_render.h"
 #include "SDL_video.h"
+#include "src/bong.hpp"
 #include "utils.hpp"
 #include <SDL.h>
 #include <fmt/core.h>
+#include <fstream>
+#include <iterator>
 #include <memory>
+#include <string>
+#include <string_view>
 
 class GUI {
 public:
@@ -66,19 +71,46 @@ private:
     SDL_Renderer* renderer;
 };
 
+auto read_file_into_string(const std::string& filename)
+{
+    auto file = std::ifstream { filename };
+    auto contents = std::string(
+        std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>());
+    return contents;
+}
+struct Data {
+    int a, b;
+};
+
+auto func() -> std::unique_ptr<Data>
+{
+    return std::make_unique<Data>(Data { 5, 3 });
+}
 auto main() -> int
 {
 
-    // test
-    fmt::print("browser: hello world!\n");
-    auto gui = GUI::create().unwrap();
-    while (true) {
-        bool should_exit = gui->should_exit();
-        if (should_exit)
-            break;
-        gui->set_background_color(100, 180, 220);
-        SDL_Rect rect = { .x = 0, .y = 0, .w = 50, .h = 50 };
-        gui->create_rect(rect, 255, 0, 0);
-        gui->update_gui();
+    auto text = read_file_into_string("../examples/helloworld/main.bong");
+    auto tokens = bong::Lexer { text }.collect();
+    if (tokens) {
+        fmt::print("tokens:\n");
+        for (const auto& token : *tokens)
+            fmt::print("    {}\n", token.to_string());
+    } else {
+        fmt::print("lexer error: {}\n    at {}:{}\n",
+            tokens.unwrap_error().message, tokens.unwrap_error().location.line,
+            tokens.unwrap_error().location.col);
     }
+
+    // test
+    // fmt::print("browser: hello world!\n");
+    // auto gui = GUI::create().unwrap();
+    // while (true) {
+    //     bool should_exit = gui->should_exit();
+    //     if (should_exit)
+    //         break;
+    //     gui->set_background_color(100, 180, 220);
+    //     SDL_Rect rect = { .x = 0, .y = 0, .w = 50, .h = 50 };
+    //     gui->create_rect(rect, 255, 0, 0);
+    //     gui->update_gui();
+    // }
 }

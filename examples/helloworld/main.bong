@@ -1,0 +1,18 @@
+page {
+    text.title {
+        "hello world"
+    }
+    input#answer {
+        placeholder="answer"
+    }
+    // text { "hello world" }
+    /*
+    input#non_answer {
+        placeholder="non answer"
+    }
+    */
+    button#submit {
+        "submit"
+    }
+    text { "hello world" }; text { "hello world" }
+}
