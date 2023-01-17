@@ -16,23 +16,26 @@ element_field ->
     | element_property
     | value
 
+element_property -> Name _ ("=" | ":") _ value
+
 single_line_fields ->
     (first_single_line_field
-        (__singleline__ single_line_field):*):? __singleline__
+        (__singleline__ single_line_field):*):? _singleline_
 
 first_single_line_field ->
     | Id
     | Class
-    | __singleline__ element_property
+    | __singleline__ single_line_element_property
     | __singleline__ single_line_value
 
 single_line_field ->
     | Id
     | Class
-    | element_property
+    | single_line_element_property
     | single_line_value
 
-element_property -> Name _ ("=" | ":") _ value
+single_line_element_property ->
+    Name _singleline_ ("=" | ":") _singleline_ value
 
 single_line_value ->
     | array
@@ -77,7 +80,7 @@ mandatory_linebreak ->
     line_breaker
     whitespace_and_line_break:*
 
-single_line_whitespace -> SingleLineComment | SingleLineWhitespace
+single_line_whitespace -> SingleLineWhitespace | MultiLineComment
 
 line_breaker -> MultiLineComment | MultiLineWhitespace | ";"
 

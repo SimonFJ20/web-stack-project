@@ -204,9 +204,13 @@ struct Bool final : public Node {
 class Parser {
 public:
     struct Error {
-        Error(Lexer::Error&& error)
+        Error(Lexer::Error error)
             : message { std::move(error.message) }
             , location { error.location }
+        { }
+        Error(std::string message, Location location)
+            : message { std::move(message) }
+            , location { location }
         { }
 
         std::string message;
@@ -226,10 +230,6 @@ public:
     auto parse_element_field(Element::Initializer& initializer) noexcept
         -> Result<void, Error>;
     auto parse_single_line_fields(Element::Initializer& initializer) noexcept
-        -> Result<void, Error>;
-    auto parse_first_single_line_field(
-        Element::Initializer& initializer) noexcept -> Result<void, Error>;
-    auto parse_single_line_field(Element::Initializer& initializer) noexcept
         -> Result<void, Error>;
     auto parse_element_property() noexcept -> Result<void, Error>;
     auto parse_single_line_value() noexcept -> Result<void, Error>;

@@ -78,14 +78,7 @@ auto read_file_into_string(const std::string& filename)
         std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>());
     return contents;
 }
-struct Data {
-    int a, b;
-};
 
-auto func() -> std::unique_ptr<Data>
-{
-    return std::make_unique<Data>(Data { 5, 3 });
-}
 auto main() -> int
 {
 
