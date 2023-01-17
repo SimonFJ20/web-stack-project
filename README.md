@@ -9,15 +9,27 @@
 - Compile `meson compile`
 - Run, `./browser` or `./server`
 
+## Toolchain
+
+## Linux
+
+Install clang preferably `clang-15` or `clang-14`;
+
+### Windows 
+
+- Install Visual Studio, with `Desktop development with C++` enabled
+- Install a newer LLVM
+
 ## VS Code development setup
 
-### Install
+### Install Linux
 - LLVM and clang, `clang-15` recommended, `clang-15` based, check with `clang --version`
 - [Meson](https://mesonbuild.com/), build system
 - [Meson VS Code extension](https://marketplace.visualstudio.com/items?itemName=mesonbuild.mesonbuild)
 - [VSCode - clangd](https://marketplace.visualstudio.com/items?itemName=llvm-vs-code-extensions.vscode-clangd), linter
 - [VSCode - CodeLLDB](https://marketplace.visualstudio.com/items?itemName=vadimcn.vscode-lldb), debugger
 - [VSCode - Better C++ Syntax](https://marketplace.visualstudio.com/items?itemName=jeff-hykin.better-cpp-syntax), syntax higlighting
+
 
 ### Config
 

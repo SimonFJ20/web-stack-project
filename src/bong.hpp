@@ -201,57 +201,57 @@ struct Bool final : public Node {
     auto type() const noexcept -> Nodes override { return Nodes::Bool; }
 };
 
-class Parser {
-public:
-    struct Error {
-        Error(Lexer::Error error)
-            : message { std::move(error.message) }
-            , location { error.location }
-        { }
-        Error(std::string message, Location location)
-            : message { std::move(message) }
-            , location { location }
-        { }
+// class Parser {
+// public:
+//     struct Error {
+//         Error(Lexer::Error error)
+//             : message { std::move(error.message) }
+//             , location { error.location }
+//         { }
+//         Error(std::string message, Location location)
+//             : message { std::move(message) }
+//             , location { location }
+//         { }
 
-        std::string message;
-        Location location;
-    };
+//         std::string message;
+//         Location location;
+//     };
 
-    Parser(Lexer lexer)
-        : lexer { std::move(lexer) }
-    { }
+//     Parser(Lexer lexer)
+//         : lexer { std::move(lexer) }
+//     { }
 
-    auto parse_top_level() noexcept -> Result<std::unique_ptr<Node>, Error>;
-    auto parse_element() noexcept -> Result<std::unique_ptr<Node>, Error>;
-    auto parse_element_body(Element::Initializer& initializer) noexcept
-        -> Result<void, Error>;
-    auto parse_element_fields(Element::Initializer& initializer) noexcept
-        -> Result<void, Error>;
-    auto parse_element_field(Element::Initializer& initializer) noexcept
-        -> Result<void, Error>;
-    auto parse_single_line_fields(Element::Initializer& initializer) noexcept
-        -> Result<void, Error>;
-    auto parse_element_property() noexcept -> Result<void, Error>;
-    auto parse_single_line_value() noexcept -> Result<void, Error>;
-    auto parse_value() noexcept -> Result<std::unique_ptr<Node>, Error>;
-    auto parse_object() noexcept -> Result<void, Error>;
-    auto parse_object_properties() noexcept -> Result<void, Error>;
-    auto parse_object_property() noexcept -> Result<void, Error>;
-    auto parse_array() noexcept -> Result<void, Error>;
-    auto parse_array_values() noexcept -> Result<void, Error>;
-    auto parse_bool() noexcept -> Result<void, Error>;
-    auto parse_mandatory_same_line_whitespace() noexcept -> Result<void, Error>;
-    auto parse_optional_same_line_whitespace() noexcept -> Result<void, Error>;
-    auto parse_mandatory_linebreak() noexcept -> Result<void, Error>;
-    auto parse_single_line_whitespace() noexcept -> Result<void, Error>;
-    auto parse_line_breaker() noexcept -> Result<void, Error>;
-    auto parse_whitespace_and_line_break() noexcept -> Result<void, Error>;
-    auto parse_optional_whitespace() noexcept -> Result<void, Error>;
-    auto parse_mandatory_whitespace() noexcept -> Result<void, Error>;
-    auto parse_singular_whitespace() noexcept -> Result<void, Error>;
+//     auto parse_top_level() noexcept -> Result<std::unique_ptr<Node>, Error>;
+//     auto parse_element() noexcept -> Result<std::unique_ptr<Node>, Error>;
+//     auto parse_element_body(Element::Initializer& initializer) noexcept
+//         -> Result<void, Error>;
+//     auto parse_element_fields(Element::Initializer& initializer) noexcept
+//         -> Result<void, Error>;
+//     auto parse_element_field(Element::Initializer& initializer) noexcept
+//         -> Result<void, Error>;
+//     auto parse_single_line_fields(Element::Initializer& initializer) noexcept
+//         -> Result<void, Error>;
+//     auto parse_element_property() noexcept -> Result<void, Error>;
+//     auto parse_single_line_value() noexcept -> Result<void, Error>;
+//     auto parse_value() noexcept -> Result<std::unique_ptr<Node>, Error>;
+//     auto parse_object() noexcept -> Result<void, Error>;
+//     auto parse_object_properties() noexcept -> Result<void, Error>;
+//     auto parse_object_property() noexcept -> Result<void, Error>;
+//     auto parse_array() noexcept -> Result<void, Error>;
+//     auto parse_array_values() noexcept -> Result<void, Error>;
+//     auto parse_bool() noexcept -> Result<void, Error>;
+//     auto parse_mandatory_same_line_whitespace() noexcept -> Result<void,
+//     Error>; auto parse_optional_same_line_whitespace() noexcept ->
+//     Result<void, Error>; auto parse_mandatory_linebreak() noexcept ->
+//     Result<void, Error>; auto parse_single_line_whitespace() noexcept ->
+//     Result<void, Error>; auto parse_line_breaker() noexcept -> Result<void,
+//     Error>; auto parse_whitespace_and_line_break() noexcept -> Result<void,
+//     Error>; auto parse_optional_whitespace() noexcept -> Result<void, Error>;
+//     auto parse_mandatory_whitespace() noexcept -> Result<void, Error>;
+//     auto parse_singular_whitespace() noexcept -> Result<void, Error>;
 
-private:
-    Lexer lexer;
-};
+// private:
+//     Lexer lexer;
+// };
 
 }

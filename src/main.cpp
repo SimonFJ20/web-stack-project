@@ -94,16 +94,15 @@ auto main() -> int
             tokens.unwrap_error().location.col);
     }
 
-    // test
-    // fmt::print("browser: hello world!\n");
-    // auto gui = GUI::create().unwrap();
-    // while (true) {
-    //     bool should_exit = gui->should_exit();
-    //     if (should_exit)
-    //         break;
-    //     gui->set_background_color(100, 180, 220);
-    //     SDL_Rect rect = { .x = 0, .y = 0, .w = 50, .h = 50 };
-    //     gui->create_rect(rect, 255, 0, 0);
-    //     gui->update_gui();
-    // }
+    fmt::print("browser: hello world!\n");
+    auto gui = GUI::create().unwrap();
+    while (true) {
+        bool should_exit = gui->should_exit();
+        if (should_exit)
+            break;
+        gui->set_background_color(100, 180, 220);
+        SDL_Rect rect = { .x = 0, .y = 0, .w = 50, .h = 50 };
+        gui->create_rect(rect, 255, 0, 0);
+        gui->update_gui();
+    }
 }

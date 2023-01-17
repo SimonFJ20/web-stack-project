@@ -339,77 +339,79 @@ auto Lexer::step() noexcept -> void
     }
 }
 
-auto Parser::parse_top_level() noexcept -> Result<std::unique_ptr<Node>, Error>
-{
-    if (!lexer.peek())
-        return Error { lexer.peek().unwrap_error() };
-    else if (lexer.peek()->type == Tokens::Name)
-        return parse_element();
-    else
-        return parse_value();
-}
+// auto Parser::parse_top_level() noexcept -> Result<std::unique_ptr<Node>,
+// Error>
+// {
+//     if (!lexer.peek())
+//         return Error { lexer.peek().unwrap_error() };
+//     else if (lexer.peek()->type == Tokens::Name)
+//         return parse_element();
+//     else
+//         return parse_value();
+// }
 
-auto Parser::parse_element() noexcept -> Result<std::unique_ptr<Node>, Error>
-{
-    auto name = *lexer.peek();
+// auto Parser::parse_element() noexcept -> Result<std::unique_ptr<Node>, Error>
+// {
+//     auto name = *lexer.peek();
 
-    auto ids = Element::Ids {};
-    auto classes = Element::Classes {};
-    auto properties = Element::Properties {};
-    auto values = Element::Values {};
+//     auto ids = Element::Ids {};
+//     auto classes = Element::Classes {};
+//     auto properties = Element::Properties {};
+//     auto values = Element::Values {};
 
-    if (auto result = lexer.next(); !result)
-        return Error { result.unwrap_error() };
-    return Result<std::unique_ptr<Node>, Error>::create_ok(
-        std::make_unique<Element>(
-            Element { std::string { name.value() }, {}, {}, {}, {} }));
-}
+//     if (auto result = lexer.next(); !result)
+//         return Error { result.unwrap_error() };
+//     return Result<std::unique_ptr<Node>, Error>::create_ok(
+//         std::make_unique<Element>(
+//             Element { std::string { name.value() }, {}, {}, {}, {} }));
+// }
 
-auto Parser::parse_single_line_fields(
-    Element::Initializer& initializer) noexcept -> Result<void, Error>
-{
-    if (lexer.peek()->type == Tokens::Id) {
-        initializer.ids.push_back(std::string { lexer.peek()->value() });
-        if (auto result = lexer.next(); !result)
-            return Error { result.unwrap_error() };
-        // do the rest;
-    } else if (lexer.peek()->type == Tokens::Class) {
-        initializer.classes.push_back(std::string { lexer.peek()->value() });
-        if (auto result = lexer.next(); !result)
-            return Error { result.unwrap_error() };
-        // do the rest
-    } else {
-        if (auto result = parse_mandatory_same_line_whitespace(); !result)
-            return result;
-        if (lexer.peek()->type == Tokens::Name) {
-            auto key = lexer.peek();
-            if (auto result = lexer.next(); !result)
-                return Error { result.unwrap_error() };
-            if (auto result = parse_optional_whitespace(); !result)
-                return result;
-            if (lexer.peek()->type != Tokens::Equal
-                and lexer.peek()->type != Tokens::Colon)
-                return Error {
-                    fmt::format("expected '=' or ':', got {}",
-                        lexer.peek()->to_string()),
-                    lexer.peek()->location,
-                };
-            if (auto result = lexer.next(); !result)
-                return Error { result.unwrap_error() };
-            if (auto result = parse_optional_same_line_whitespace(); !result)
-                return result;
-            auto value = parse_single_line_value();
-            if (!value)
-                return value;
-            // do the rest
-        } else {
-            auto value = parse_single_line_value();
-            if (!value)
-                return value;
-            // do the rest
-        }
-    }
-}
+// auto Parser::parse_single_line_fields(
+//     Element::Initializer& initializer) noexcept -> Result<void, Error>
+// {
+//     if (lexer.peek()->type == Tokens::Id) {
+//         initializer.ids.push_back(std::string { lexer.peek()->value() });
+//         if (auto result = lexer.next(); !result)
+//             return Error { result.unwrap_error() };
+//         // do the rest;
+//     } else if (lexer.peek()->type == Tokens::Class) {
+//         initializer.classes.push_back(std::string { lexer.peek()->value() });
+//         if (auto result = lexer.next(); !result)
+//             return Error { result.unwrap_error() };
+//         // do the rest
+//     } else {
+//         if (auto result = parse_mandatory_same_line_whitespace(); !result)
+//             return result;
+//         if (lexer.peek()->type == Tokens::Name) {
+//             auto key = lexer.peek();
+//             if (auto result = lexer.next(); !result)
+//                 return Error { result.unwrap_error() };
+//             if (auto result = parse_optional_whitespace(); !result)
+//                 return result;
+//             if (lexer.peek()->type != Tokens::Equal
+//                 and lexer.peek()->type != Tokens::Colon)
+//                 return Error {
+//                     fmt::format("expected '=' or ':', got {}",
+//                         lexer.peek()->to_string()),
+//                     lexer.peek()->location,
+//                 };
+//             if (auto result = lexer.next(); !result)
+//                 return Error { result.unwrap_error() };
+//             if (auto result = parse_optional_same_line_whitespace(); !result)
+//                 return result;
+//             auto value = parse_single_line_value();
+//             if (!value)
+//                 return value;
+//             // do the rest
+//         } else {
+//             auto value = parse_single_line_value();
+//             if (!value)
+//                 return value;
+//             // do the rest
+//         }
+//     }
+//     return {};
+// }
 
 // auto Parser::parse_single_line_field(Element::Initializer& initializer)
 // noexcept
