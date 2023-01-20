@@ -30,6 +30,10 @@ pub enum Token {
     RBrace(String),
     LBracket(String),
     RBracket(String),
+    Equal(String),
+    Colon(String),
+    SemiColon(String),
+    Comma(String),
 }
 
 #[derive(PartialEq)]
