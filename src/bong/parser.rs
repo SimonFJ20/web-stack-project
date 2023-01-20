@@ -40,7 +40,9 @@ impl Parser {
         }
     }
 
-    fn parse_element(&mut self) -> Result<Node, ParserError> {}
+    fn parse_element(&mut self) -> Result<Node, ParserError> {
+        todo!()
+    }
 
     fn parse_value(&mut self) -> Result<Node, ParserError> {
         match self.current() {
@@ -70,19 +72,20 @@ impl Parser {
                 Ok(Node::Object(values))
             }
             Some(t @ (Token::Name(_) | Token::String(_))) => {
-                let key = match t {
-                    Token::Name(v) => v,
-                    Token::String(v) => &v[1..v.len() - 1].to_string(),
-                    _ => panic!("checked by previous predicate"),
-                };
-                self.step();
-                match self.current() {
-                    Some(Token::Equal(_) | Token::Colon(_)) => {}
-                    _ => return Err("expected ':' or '='".to_string()),
-                }
-                self.step();
-                values[key] = Box::new(self.parse_value()?);
-                self.parse_object_tail(values)
+                // let key = match t {
+                //     Token::Name(v) => v,
+                //     Token::String(v) => &v[1..v.len() - 1].to_string(),
+                //     _ => panic!("checked by previous predicate"),
+                // };
+                // self.step();
+                // match self.current() {
+                //     Some(Token::Equal(_) | Token::Colon(_)) => {}
+                //     _ => return Err("expected ':' or '='".to_string()),
+                // }
+                // self.step();
+                // values[key] = Box::new(self.parse_value()?);
+                // self.parse_object_tail(values)
+                todo!()
             }
             _ => Err("expected Name, String or '}'".to_string()),
         }
@@ -103,18 +106,19 @@ impl Parser {
                             break Ok(Node::Object(values));
                         }
                         Some(t @ (Token::Name(_) | Token::String(_))) => {
-                            let key = match t {
-                                Token::Name(v) => v,
-                                Token::String(v) => &v[1..v.len() - 1].to_string(),
-                                _ => panic!("unterminated object, checked by previous predicate"),
-                            };
-                            self.step();
-                            match self.current() {
-                                Some(Token::Equal(_) | Token::Colon(_)) => {}
-                                _ => return Err("expected ':' or '='".to_string()),
-                            }
-                            self.step();
-                            values[key] = Box::new(self.parse_value()?);
+                            // let key = match t {
+                            //     Token::Name(v) => v,
+                            //     Token::String(v) => &v[1..v.len() - 1].to_string(),
+                            //     _ => panic!("unterminated object, checked by previous predicate"),
+                            // };
+                            // self.step();
+                            // match self.current() {
+                            //     Some(Token::Equal(_) | Token::Colon(_)) => {}
+                            //     _ => return Err("expected ':' or '='".to_string()),
+                            // }
+                            // self.step();
+                            // values[key] = Box::new(self.parse_value()?);
+                            todo!()
                         }
                         _ => {
                             break Err(
@@ -135,6 +139,10 @@ impl Parser {
             Some(Token::RBracket(_)) => {
                 self.step();
                 Ok(Node::Array(values))
+            }
+            Some(_) => {
+                values.push(self.parse_value()?);
+                todo!()
             }
             _ => Err("unterminated array, expected Value or ']'".to_string()),
         }
