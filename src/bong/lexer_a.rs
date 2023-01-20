@@ -1,23 +1,35 @@
-enum LexerErrorType {
+#[derive(Debug, Clone, PartialEq)]
+pub enum LexerErrorType {
     UnexpectedToken(char),
     InvalidConstructor,
 }
 
-struct LexerError {
+#[derive(Debug, Clone, PartialEq)]
+pub struct LexerError {
     error: LexerErrorType,
     line: isize,
     col: isize,
 }
 
-enum Token {
+#[derive(Debug, Clone, PartialEq)]
+pub enum Token {
     Name(String),
+    Id(String), // not implemented
     Class(String),
     SlWhitespace(String),
     MlWhitespace(String),
     SlComment(String),
+    MlComment(String), // not implemented
+    Int(String),       // not implemented
+    Float(String),     // not implemented
     String(String),
+    Null(String),  // not implemented
+    True(String),  // not implemented
+    False(String), // not implemented
     LBrace(String),
     RBrace(String),
+    LBracket(String), // not implemented
+    RBracket(String), // not implemented
 }
 
 enum Mode {
@@ -44,7 +56,7 @@ impl Mode {
     }
 }
 
-fn lex(code: String) -> Result<Vec<Token>, LexerError> {
+pub fn lex(code: String) -> Result<Vec<Token>, LexerError> {
     let mut tokens = Vec::new();
     let mut value = Vec::new();
     let mut iter = code.chars();
