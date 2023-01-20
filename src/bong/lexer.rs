@@ -14,7 +14,7 @@ pub struct LexerError {
 #[derive(Debug, Clone, PartialEq)]
 pub enum Token {
     Name(String),
-    Id(String), // not implemented
+    Id(String),
     Class(String),
     SlWhitespace(String),
     MlWhitespace(String),
@@ -28,13 +28,15 @@ pub enum Token {
     False(String), // not implemented
     LBrace(String),
     RBrace(String),
-    LBracket(String), // not implemented
-    RBracket(String), // not implemented
+    LBracket(String),
+    RBracket(String),
 }
 
+#[derive(PartialEq)]
 enum Mode {
     Name,
     Class,
+    Id,
     String,
     EscapedString,
     SlWhitespace,
@@ -51,12 +53,14 @@ impl Mode {
             Mode::SlWhitespace => Ok(Box::new(Token::SlWhitespace)),
             Mode::MlWhitespace => Ok(Box::new(Token::MlWhitespace)),
             Mode::SlComment => Ok(Box::new(Token::SlComment)),
+            Mode::Id => Ok(Box::new(Token::Id)),
             Mode::EscapedString => Err(LexerErrorType::InvalidConstructor),
         }
     }
 }
 
-pub fn lex(code: String) -> Result<Vec<Token>, LexerError> {
+#[allow(dead_code)]
+pub fn lexer(code: String) -> Result<Vec<Token>, LexerError> {
     let mut tokens = Vec::new();
     let mut value = Vec::new();
     let mut iter = code.chars();
@@ -64,23 +68,37 @@ pub fn lex(code: String) -> Result<Vec<Token>, LexerError> {
     let mut line = 0;
     let mut col = 0;
     let position_map = move |error: LexerErrorType| LexerError { error, line, col };
-    loop {
-        let c = iter.next();
-        if c.is_none() {
-            break;
+    let collect_into_token_and_push =
+        |constructor: Box<dyn Fn(String) -> Token>,
+         tokens: &mut Vec<Token>,
+         value: &mut Vec<char>| {
+            let token = constructor(value.iter().collect());
+            tokens.push(token);
+            value.clear();
         };
-        match c.unwrap() {
-            '.' => {
+    loop {
+        let current_char = match iter.next() {
+            Some(c) => c,
+            None => break,
+        };
+        match current_char {
+            v @ '.' | v @ '#' => {
                 match mode {
                     m @ Mode::Name
                     | m @ Mode::Class
+                    | m @ Mode::Id
                     | m @ Mode::SlWhitespace
                     | m @ Mode::MlWhitespace => {
-                        let string_value = value.iter().collect();
-                        let constructor = m.token_constructor().map_err(position_map)?;
-                        tokens.push(constructor(string_value));
-                        value.clear();
-                        mode = Mode::Class;
+                        collect_into_token_and_push(
+                            m.token_constructor().map_err(position_map)?,
+                            &mut tokens,
+                            &mut value,
+                        );
+                        mode = match v {
+                            '.' => Mode::Class,
+                            '#' => Mode::Id,
+                            _ => panic!("race condition"),
+                        };
                     }
                     Mode::String | Mode::SlComment => {}
                     Mode::EscapedString => {
@@ -91,7 +109,7 @@ pub fn lex(code: String) -> Result<Vec<Token>, LexerError> {
                         })
                     }
                 };
-                value.push('.');
+                value.push(v);
             }
             '\\' => match mode {
                 Mode::String => {
@@ -111,17 +129,20 @@ pub fn lex(code: String) -> Result<Vec<Token>, LexerError> {
                     m @ Mode::String => {
                         mode = Mode::SlWhitespace;
                         value.push('"');
-                        let string_value = value.iter().collect();
-                        let constructor = m.token_constructor().map_err(position_map)?;
-                        tokens.push(constructor(string_value));
-                        value.clear();
+
+                        collect_into_token_and_push(
+                            m.token_constructor().map_err(position_map)?,
+                            &mut tokens,
+                            &mut value,
+                        );
                     }
                     m @ Mode::SlWhitespace | m @ Mode::MlWhitespace => {
                         mode = Mode::String;
-                        let string_value = value.iter().collect();
-                        let constructor = m.token_constructor().map_err(position_map)?;
-                        tokens.push(constructor(string_value));
-                        value.clear();
+                        collect_into_token_and_push(
+                            m.token_constructor().map_err(position_map)?,
+                            &mut tokens,
+                            &mut value,
+                        );
                         value.push('"');
                     }
                     Mode::EscapedString => {
@@ -140,59 +161,47 @@ pub fn lex(code: String) -> Result<Vec<Token>, LexerError> {
                     }
                 };
             }
-            '{' => match mode {
+
+            v @ '{' | v @ '}' | v @ '[' | v @ ']' => match mode {
                 m @ Mode::Name
                 | m @ Mode::Class
+                | m @ Mode::Id
                 | m @ Mode::MlWhitespace
                 | m @ Mode::SlWhitespace => {
-                    let string_value = value.iter().collect();
-                    let constructor = m.token_constructor().map_err(position_map)?;
-                    tokens.push(constructor(string_value));
-                    value.clear();
+                    collect_into_token_and_push(
+                        m.token_constructor().map_err(position_map)?,
+                        &mut tokens,
+                        &mut value,
+                    );
                     mode = Mode::SlWhitespace;
-                    tokens.push(Token::LBrace(String::from('{')));
+                    let constructor = match v {
+                        '{' => Token::LBrace,
+                        '}' => Token::RBrace,
+                        '[' => Token::LBracket,
+                        ']' => Token::RBracket,
+                        _ => panic!("race condition"),
+                    };
+                    tokens.push(constructor(String::from(v)));
                 }
                 Mode::EscapedString => {
                     return Err(LexerError {
                         line,
                         col,
-                        error: LexerErrorType::UnexpectedToken('{'),
+                        error: LexerErrorType::UnexpectedToken(v),
                     })
                 }
                 Mode::String | Mode::SlComment => {
-                    value.push('{');
-                }
-            },
-            '}' => match mode {
-                m @ Mode::Name
-                | m @ Mode::Class
-                | m @ Mode::MlWhitespace
-                | m @ Mode::SlWhitespace => {
-                    let string_value = value.iter().collect();
-                    let constructor = m.token_constructor().map_err(position_map)?;
-                    tokens.push(constructor(string_value));
-                    value.clear();
-                    mode = Mode::SlWhitespace;
-                    tokens.push(Token::RBrace(String::from('}')));
-                }
-                Mode::String | Mode::SlComment => {
-                    value.push('}');
-                }
-                Mode::EscapedString => {
-                    return Err(LexerError {
-                        line,
-                        col,
-                        error: LexerErrorType::UnexpectedToken('}'),
-                    })
+                    value.push(v);
                 }
             },
             c @ ' ' | c @ '\r' => {
                 match mode {
-                    m @ Mode::Name | m @ Mode::Class => {
-                        let string_value = value.iter().collect();
-                        let constructor = m.token_constructor().map_err(position_map)?;
-                        tokens.push(constructor(string_value));
-                        value.clear();
+                    m @ Mode::Name | m @ Mode::Class | m @ Mode::Id => {
+                        collect_into_token_and_push(
+                            m.token_constructor().map_err(position_map)?,
+                            &mut tokens,
+                            &mut value,
+                        );
                         mode = Mode::SlWhitespace;
                     }
                     Mode::String | Mode::SlComment | Mode::MlWhitespace | Mode::SlWhitespace => {}
@@ -208,11 +217,12 @@ pub fn lex(code: String) -> Result<Vec<Token>, LexerError> {
             }
             c @ '\n' => {
                 match mode {
-                    m @ Mode::Name | m @ Mode::Class | m @ Mode::SlComment => {
-                        let string_value = value.iter().collect();
-                        let constructor = m.token_constructor().map_err(position_map)?;
-                        tokens.push(constructor(string_value));
-                        value.clear();
+                    m @ Mode::Name | m @ Mode::Class | m @ Mode::Id | m @ Mode::SlComment => {
+                        collect_into_token_and_push(
+                            m.token_constructor().map_err(position_map)?,
+                            &mut tokens,
+                            &mut value,
+                        );
                         mode = Mode::MlWhitespace;
                     }
                     Mode::MlWhitespace | Mode::SlWhitespace => {
@@ -236,12 +246,14 @@ pub fn lex(code: String) -> Result<Vec<Token>, LexerError> {
                     Mode::String | Mode::SlComment => {}
                     m @ Mode::Name
                     | m @ Mode::Class
+                    | m @ Mode::Id
                     | m @ Mode::SlWhitespace
                     | m @ Mode::MlWhitespace => {
-                        let string_value = value.iter().collect();
-                        let constructor = m.token_constructor().map_err(position_map)?;
-                        tokens.push(constructor(string_value));
-                        value.clear();
+                        collect_into_token_and_push(
+                            m.token_constructor().map_err(position_map)?,
+                            &mut tokens,
+                            &mut value,
+                        );
                         mode = Mode::SlComment;
                     }
                     Mode::EscapedString => {
@@ -256,15 +268,26 @@ pub fn lex(code: String) -> Result<Vec<Token>, LexerError> {
             }
             v @ 'A'..='Z' | v @ 'a'..='z' | v @ '0'..='9' => {
                 match mode {
-                    Mode::String | Mode::SlComment | Mode::Name | Mode::Class => {}
+                    Mode::Name | Mode::Class | Mode::Id => {
+                        if v.is_numeric() {
+                            if value.len() == 0 || mode == Mode::Id && value.len() == 1 {
+                                return Err(LexerError {
+                                    line,
+                                    col,
+                                    error: LexerErrorType::UnexpectedToken(v),
+                                });
+                            }
+                        }
+                    }
+                    Mode::String | Mode::SlComment => {}
                     m @ Mode::SlWhitespace | m @ Mode::MlWhitespace => {
-                        let string_value = value.iter().collect();
-                        let constructor = m.token_constructor().map_err(position_map)?;
-                        tokens.push(constructor(string_value));
-                        value.clear();
+                        collect_into_token_and_push(
+                            m.token_constructor().map_err(position_map)?,
+                            &mut tokens,
+                            &mut value,
+                        );
                         mode = Mode::Name;
                     }
-
                     Mode::EscapedString => {
                         return Err(LexerError {
                             line,
@@ -275,13 +298,18 @@ pub fn lex(code: String) -> Result<Vec<Token>, LexerError> {
                 };
                 value.push(v);
             }
-            unrecognized_char => {
-                return Err(LexerError {
-                    line,
-                    col,
-                    error: LexerErrorType::UnexpectedToken(unrecognized_char),
-                })
-            }
+            unrecognized_char => match mode {
+                Mode::String => {
+                    value.push(unrecognized_char);
+                }
+                _ => {
+                    return Err(LexerError {
+                        line,
+                        col,
+                        error: LexerErrorType::UnexpectedToken(unrecognized_char),
+                    });
+                }
+            },
         }
         col += 1;
     }
@@ -295,7 +323,7 @@ fn test_example_1() {
     // text { \"hello world\" }
     \"hello world\"
 }";
-    let tokens = lex(text.to_string());
+    let tokens = lexer(text.to_string());
     assert_eq!(
         tokens,
         Ok(vec![
