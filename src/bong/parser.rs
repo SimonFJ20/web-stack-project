@@ -1,6 +1,6 @@
-use std::iter::Map;
+#![allow(dead_code)]
 
-use crate::bong::lexer::Token;
+use std::iter::Map;
 
 pub enum Node {
     Element {
