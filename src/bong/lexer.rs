@@ -1,17 +1,17 @@
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum ErrorType {
     UnexpectedToken(char),
     InvalidConstructor,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Error {
     error: ErrorType,
     line: isize,
     col: isize,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum Token {
     Name(String),
     Id(String),
@@ -30,10 +30,10 @@ pub enum Token {
     RBrace(String),
     LBracket(String),
     RBracket(String),
-    Equal(String),
-    Colon(String),
-    SemiColon(String),
-    Comma(String),
+    Equal(String),     // not implemented
+    Colon(String),     // not implemented
+    SemiColon(String), // not implemented
+    Comma(String),     // not implemented
 }
 
 #[derive(PartialEq)]

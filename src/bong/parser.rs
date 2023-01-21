@@ -41,7 +41,18 @@ impl Parser {
     }
 
     fn parse_element(&mut self) -> Result<Node, ParserError> {
+        let name = match self.current() {
+            Some(Token::Name(value)) => value.clone(),
+            _ => panic!("checked by previous predicate"),
+        };
+        self.step();
         todo!()
+    }
+
+    fn parse_singe_line_field(&mut self) -> Result<Node, ParserError> {
+        match self.current() {
+            _ => todo!(),
+        }
     }
 
     fn parse_value(&mut self) -> Result<Node, ParserError> {
@@ -72,26 +83,28 @@ impl Parser {
                 Ok(Node::Object(values))
             }
             Some(t @ (Token::Name(_) | Token::String(_))) => {
-                // let key = match t {
-                //     Token::Name(v) => v,
-                //     Token::String(v) => &v[1..v.len() - 1].to_string(),
-                //     _ => panic!("checked by previous predicate"),
-                // };
-                // self.step();
-                // match self.current() {
-                //     Some(Token::Equal(_) | Token::Colon(_)) => {}
-                //     _ => return Err("expected ':' or '='".to_string()),
-                // }
-                // self.step();
-                // values[key] = Box::new(self.parse_value()?);
-                // self.parse_object_tail(values)
-                todo!()
+                let key = match t {
+                    Token::Name(v) => v.clone(),
+                    Token::String(v) => v[1..v.len() - 1].to_string(),
+                    _ => panic!("checked by previous predicate"),
+                };
+                self.step();
+                match self.current() {
+                    Some(Token::Equal(_) | Token::Colon(_)) => {}
+                    _ => return Err("expected ':' or '='".to_string()),
+                }
+                self.step();
+                values.insert(key, Box::new(self.parse_value()?));
+                self.parse_object_tail(values)
             }
             _ => Err("expected Name, String or '}'".to_string()),
         }
     }
 
-    fn parse_object_tail(&mut self, values: HashMap<String, Box<Node>>) -> Result<Node, String> {
+    fn parse_object_tail(
+        &mut self,
+        mut values: HashMap<String, Box<Node>>,
+    ) -> Result<Node, String> {
         loop {
             match self.current() {
                 Some(Token::RBrace(_)) => {
@@ -106,18 +119,18 @@ impl Parser {
                             break Ok(Node::Object(values));
                         }
                         Some(t @ (Token::Name(_) | Token::String(_))) => {
-                            // let key = match t {
-                            //     Token::Name(v) => v,
-                            //     Token::String(v) => &v[1..v.len() - 1].to_string(),
-                            //     _ => panic!("unterminated object, checked by previous predicate"),
-                            // };
-                            // self.step();
-                            // match self.current() {
-                            //     Some(Token::Equal(_) | Token::Colon(_)) => {}
-                            //     _ => return Err("expected ':' or '='".to_string()),
-                            // }
-                            // self.step();
-                            // values[key] = Box::new(self.parse_value()?);
+                            let key = match t {
+                                Token::Name(v) => v.clone(),
+                                Token::String(v) => v[1..v.len() - 1].to_string(),
+                                _ => panic!("unterminated object, checked by previous predicate"),
+                            };
+                            self.step();
+                            match self.current() {
+                                Some(Token::Equal(_) | Token::Colon(_)) => {}
+                                _ => return Err("expected ':' or '='".to_string()),
+                            }
+                            self.step();
+                            values.insert(key, Box::new(self.parse_value()?));
                             todo!()
                         }
                         _ => {

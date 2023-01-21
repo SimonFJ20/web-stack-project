@@ -56,7 +56,8 @@ value ->
 
 object -> "{" object_properties "}"
 
-object_properties -> (_ object_property (_ "," _ object_property):* _ ",":?):? _
+object_properties ->
+    (_ object_property (_ "," _ object_property):* _ ",":?):? _
 
 object_property -> (Name | String) _ ("=" | ":") _ value
 
