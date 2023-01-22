@@ -27,6 +27,13 @@ pub struct Parser {
 
 type ParserError = String;
 
+enum ElementField {
+    Id(String),
+    Class(String),
+    Property(Box<Node>),
+    Value(Node),
+}
+
 impl Parser {
     pub fn new(tokens: Vec<Token>) -> Self {
         Self { tokens, index: 0 }
@@ -49,10 +56,20 @@ impl Parser {
         todo!()
     }
 
-    fn parse_singe_line_field(&mut self) -> Result<Node, ParserError> {
+    fn parse_singe_line_fields(&mut self) -> Result<Vec<ElementField>, ParserError> {
+        let mut fields = Vec::<ElementField>::new();
         match self.current() {
+            Some(Token::Id(value)) => {
+                fields.push(ElementField::Id(value.clone()));
+                self.step();
+            }
+            Some(Token::Class(value)) => {
+                fields.push(ElementField::Class(value.clone()));
+                self.step();
+            }
             _ => todo!(),
         }
+        Ok(fields)
     }
 
     fn parse_value(&mut self) -> Result<Node, ParserError> {
