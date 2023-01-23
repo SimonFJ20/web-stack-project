@@ -11,8 +11,7 @@ element_fields -> (_ element_field (__linebreak__ element_field):*):? __linebrea
 
 element_field ->
     | element
-    | Id
-    | Class
+    | specifier_chain
     | element_property
     | value
 
@@ -20,22 +19,20 @@ element_property -> Name _ ("=" | ":") _ value
 
 single_line_fields ->
     (first_single_line_field
-        (__singleline__ single_line_field):*):? _singleline_
+        (__sl__ single_line_field):*):? _sl_
 
 first_single_line_field ->
-    | Id
-    | Class
-    | __singleline__ single_line_element_property
-    | __singleline__ single_line_value
+    | specifier_chain
+    | __sl__ single_line_element_property
+    | __sl__ single_line_value
 
 single_line_field ->
-    | Id
-    | Class
+    | specifier_chain
     | single_line_element_property
     | single_line_value
 
 single_line_element_property ->
-    Name _singleline_ ("=" | ":") _singleline_ value
+    Name _sl_ ("=" | ":") _sl_ value
 
 single_line_value ->
     | array
@@ -44,6 +41,12 @@ single_line_value ->
     | String
     | bool
     | Null
+
+specifier_chain -> specifier:+
+
+specifier ->
+    | Id
+    | Class
 
 value ->
     | object
@@ -67,28 +70,27 @@ array_values -> (_ value (_ "," _ value):* _ ",":?):? _
 
 bool -> True | False
 
-__singleline__ -> mandatory_same_line_whitespace
-_singleline_ -> optional_same_line_whitespace
 __linebreak__ -> mandatory_linebreak
-__ -> mandatory_whitespace
+__sl__ -> mandatory_single_line_whitespace
+_sl_ -> optional_single_line_whitespace
+__ml__ -> mandatory_whitespace
 _ -> optional_whitespace
-
-mandatory_same_line_whitespace -> single_line_whitespace:+
-optional_same_line_whitespace -> single_line_whitespace:*
 
 mandatory_linebreak ->
     single_line_whitespace:*
     line_breaker
     whitespace_and_line_break:*
 
-single_line_whitespace -> SingleLineWhitespace | MultiLineComment
-
 line_breaker -> MultiLineComment | MultiLineWhitespace | ";"
 
 whitespace_and_line_break -> singular_whitespace | ";"
 
-optional_whitespace -> singular_whitespace:*
+mandatory_single_line_whitespace -> single_line_whitespace:+
+optional_single_line_whitespace -> single_line_whitespace:*
 
+single_line_whitespace -> SingleLineWhitespace | MultiLineComment
+
+optional_whitespace -> singular_whitespace:*
 mandatory_whitespace -> singular_whitespace:+
 
 singular_whitespace ->

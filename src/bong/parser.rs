@@ -62,30 +62,49 @@ impl Parser {
             Some(Token::Id(value)) => {
                 fields.push(ElementField::Id(value.clone()));
                 self.step();
+                todo!()
             }
             Some(Token::Class(value)) => {
                 fields.push(ElementField::Class(value.clone()));
                 self.step();
+                todo!()
             }
-            _ => todo!(),
+            Some(_) => todo!(),
+            _ => Ok(fields),
         }
-        Ok(fields)
     }
 
     fn parse_value(&mut self) -> Result<Node, ParserError> {
         match self.current() {
             Some(Token::LBrace(_)) => self.parse_object(),
             Some(Token::LBracket(_)) => self.parse_object(),
-            Some(Token::Int(value)) => Ok(Node::Int(
-                value.parse().map_err(|_| "malformed int".to_string())?,
-            )),
-            Some(Token::Float(value)) => Ok(Node::Int(
-                value.parse().map_err(|_| "malformed float".to_string())?,
-            )),
-            Some(Token::String(value)) => Ok(Node::String(value[1..value.len() - 1].to_string())),
-            Some(Token::False(_)) => Ok(Node::Bool(false)),
-            Some(Token::True(_)) => Ok(Node::Bool(false)),
-            Some(Token::Null(_)) => Ok(Node::Null),
+            Some(Token::Int(value)) => {
+                let value = value.parse().map_err(|_| "malformed int".to_string())?;
+                self.step();
+                Ok(Node::Int(value))
+            }
+            Some(Token::Float(value)) => {
+                let value = value.parse().map_err(|_| "malformed float".to_string())?;
+                self.step();
+                Ok(Node::Float(value))
+            }
+            Some(Token::String(value)) => {
+                let value = value[1..value.len() - 1].to_string();
+                self.step();
+                Ok(Node::String(value))
+            }
+            Some(Token::False(_)) => {
+                self.step();
+                Ok(Node::Bool(false))
+            }
+            Some(Token::True(_)) => {
+                self.step();
+                Ok(Node::Bool(false))
+            }
+            Some(Token::Null(_)) => {
+                self.step();
+                Ok(Node::Null)
+            }
             Some(_) => Err("unexpected token, expected value".to_owned()),
             None => Err("expected value".to_owned()),
         }
@@ -93,6 +112,8 @@ impl Parser {
 
     fn parse_object(&mut self) -> Result<Node, ParserError> {
         self.step();
+        // object_properties -> (_ (...)):? _ <=> object_properties -> _ | _ (...) _
+        self.parse_optional_whitespace()?;
         let mut values = HashMap::<String, Box<Node>>::new();
         match self.current() {
             Some(Token::RBrace(_)) => {
@@ -106,11 +127,13 @@ impl Parser {
                     _ => panic!("checked by previous predicate"),
                 };
                 self.step();
+                self.parse_optional_whitespace()?;
                 match self.current() {
                     Some(Token::Equal(_) | Token::Colon(_)) => {}
                     _ => return Err("expected ':' or '='".to_string()),
                 }
                 self.step();
+                self.parse_optional_whitespace()?;
                 values.insert(key, Box::new(self.parse_value()?));
                 self.parse_object_tail(values)
             }
@@ -123,6 +146,7 @@ impl Parser {
         mut values: HashMap<String, Box<Node>>,
     ) -> Result<Node, String> {
         loop {
+            self.parse_optional_whitespace()?;
             match self.current() {
                 Some(Token::RBrace(_)) => {
                     self.step();
@@ -130,6 +154,7 @@ impl Parser {
                 }
                 Some(Token::Comma(_)) => {
                     self.step();
+                    self.parse_optional_whitespace()?;
                     match self.current() {
                         Some(Token::RBrace(_)) => {
                             self.step();
@@ -142,13 +167,15 @@ impl Parser {
                                 _ => panic!("unterminated object, checked by previous predicate"),
                             };
                             self.step();
+                            self.parse_optional_whitespace()?;
                             match self.current() {
                                 Some(Token::Equal(_) | Token::Colon(_)) => {}
                                 _ => return Err("expected ':' or '='".to_string()),
                             }
                             self.step();
+                            self.parse_optional_whitespace()?;
                             values.insert(key, Box::new(self.parse_value()?));
-                            todo!()
+                            self.parse_optional_whitespace()?;
                         }
                         _ => {
                             break Err(
@@ -164,6 +191,7 @@ impl Parser {
 
     fn parse_array(&mut self) -> Result<Node, ParserError> {
         self.step();
+        self.parse_optional_whitespace()?;
         let mut values = Vec::<Node>::new();
         match self.current() {
             Some(Token::RBracket(_)) => {
@@ -172,9 +200,109 @@ impl Parser {
             }
             Some(_) => {
                 values.push(self.parse_value()?);
-                todo!()
+                loop {
+                    match self.current() {
+                        Some(Token::RBracket(_)) => {
+                            self.step();
+                            break Ok(Node::Array(values));
+                        }
+                        Some(Token::Comma(_)) => {
+                            self.step();
+                            self.parse_optional_whitespace()?;
+                            match self.current() {
+                                Some(Token::RBracket(_)) => {
+                                    self.step();
+                                    self.parse_optional_whitespace()?;
+                                    break Ok(Node::Array(values));
+                                }
+                                _ => {
+                                    self.step();
+                                    self.parse_optional_whitespace()?;
+                                    values.push(self.parse_value()?)
+                                }
+                            }
+                        }
+                        _ => break Err("unterminated array, expected Value or ']'".to_string()),
+                    }
+                }
             }
             _ => Err("unterminated array, expected Value or ']'".to_string()),
+        }
+    }
+
+    fn parse_mandatory_linebreak(&mut self) -> Result<(), ParserError> {
+        self.parse_single_line_optional_whitespace()?;
+        match self.current() {
+            Some(Token::MlWhitespace(_) | Token::MlComment(_) | Token::SemiColon(_)) => {
+                self.step();
+                loop {
+                    match self.current() {
+                        Some(
+                            Token::MlWhitespace(_)
+                            | Token::SlWhitespace(_)
+                            | Token::MlComment(_)
+                            | Token::SlComment(_)
+                            | Token::SemiColon(_),
+                        ) => {
+                            self.step();
+                        }
+                        _ => break Ok(()),
+                    }
+                }
+            }
+            _ => Err("expected linebreak".to_string()),
+        }
+    }
+
+    fn parse_single_line_mandatory_whitespace(&mut self) -> Result<(), ParserError> {
+        match self.current() {
+            Some(Token::SlWhitespace(_) | Token::SlComment(_)) => {
+                self.step();
+                self.parse_single_line_optional_whitespace()
+            }
+            _ => Err("expected whitespace".to_string()),
+        }
+    }
+
+    fn parse_single_line_optional_whitespace(&mut self) -> Result<(), ParserError> {
+        loop {
+            match self.current() {
+                Some(Token::SlWhitespace(_) | Token::SlComment(_)) => {
+                    self.step();
+                }
+                _ => break Ok(()),
+            }
+        }
+    }
+
+    fn parse_mandatory_whitespace(&mut self) -> Result<(), ParserError> {
+        match self.current() {
+            Some(
+                Token::MlWhitespace(_)
+                | Token::SlWhitespace(_)
+                | Token::MlComment(_)
+                | Token::SlComment(_),
+            ) => {
+                self.step();
+                self.parse_optional_whitespace()
+            }
+            _ => Err("expected whitespace".to_string()),
+        }
+    }
+
+    fn parse_optional_whitespace(&mut self) -> Result<(), ParserError> {
+        loop {
+            match self.current() {
+                Some(
+                    Token::MlWhitespace(_)
+                    | Token::SlWhitespace(_)
+                    | Token::MlComment(_)
+                    | Token::SlComment(_),
+                ) => {
+                    self.step();
+                }
+                _ => break Ok(()),
+            }
         }
     }
 
